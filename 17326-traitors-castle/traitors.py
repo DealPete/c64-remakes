@@ -12,7 +12,6 @@ petscii = pygame.font.Font("../C64_Pro_Mono-STYLE.ttf", 16)
 
 keys = ['1', '2', '3', '4', '5', '6', '7', '8', '9']
 
-playing = True
 state = {"turn": 0, "hits": 0}
 
 def new_turn():
