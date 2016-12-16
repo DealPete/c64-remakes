@@ -7,8 +7,6 @@ pygame.init()
 screen = pygame.display.set_mode([480, 400])
 petscii = pygame.font.Font("../C64_Pro_Mono-STYLE.ttf", 16)
 
-#string = "".join([chr(x) for x in range(0xEE30, 0xEE40)])
-
 paddleY = 100
 points = 0
 ballX = 10
