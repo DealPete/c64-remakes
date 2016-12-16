@@ -1,0 +1,16 @@
+Controls for this game:
+Start Game: SPACE
+Paddle up: CONTROL
+Paddle down: SHIFT
+
+poke 53280,0 - set border to black
+poke 53281,0 - set background to black
+
+printing "E" changes text color to white.
+printing "S" puts the cursor in the upper left hand corner.
+printing "heart (Control-S)" clears the screen.
+
+peek 197 - examines the keyboard code. 60 is the spacebar.
+peek 653 - checks status of shift keys. 4 is the control key.
+
+1024-2023 is the default area for screen memory. Assuming a screen of (0,0) to (39,24), character at (x,y) is 1024 + y*40 + x.
