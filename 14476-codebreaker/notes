@@ -1,0 +1,3 @@
+This game was written for a 512-byte challenge and is perfect the way it is. For the conversion, to keep the flavour of the challenge I've decided to write it into a 512-byte PC bootloader using x86 assembly. Only when the user has broken the code will he be able to boot up his computer.
+
+problem: I'm testing on QEMU and the Seabios routines are buggy... I can't find a way to print black text on a grey background. Perhaps this could work by writing directly to video memory.
