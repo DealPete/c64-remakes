@@ -1,16 +1,23 @@
-import c64, pygame, sys, math, time
+import sys
+sys.path.append('..')
+
+import math, time
 from random import random
 from collections import deque
 
-size = (640, 592)
+import pygame
+pygame.init()
+screen = pygame.display.set_mode((640, 592))
 
-c64.init(size)
+from c64 import C64
+c64 = C64(screen)
+
 pygame.display.set_caption("Tunnel Journey")
 
 ship = pygame.image.load('../00072-64-valley-of-death/ship.png')
 ship_mask = pygame.mask.from_surface(ship)
 
-walls = pygame.Surface(size, pygame.SRCALPHA)
+walls = pygame.Surface((640, 592), pygame.SRCALPHA)
 
 state = {}
 
@@ -63,12 +70,12 @@ while True:
 		if key[pygame.K_RIGHT]:
 			state['shipX'] += 2
 
-	c64.screen.fill(c64.BLACK)
-	c64.screen.blit(walls, [0, 0])
-	c64.screen.blit(ship, [state['shipX'], 10])
+	screen.fill(c64.BLACK)
+	screen.blit(walls, [0, 0])
+	screen.blit(ship, [state['shipX'], 10])
 
 	for rock in rocks:
-		c64.screen.blit(rock[1], rock[0])
+		screen.blit(rock[1], rock[0])
 		if state['state'] == 'playing': rock[0][1] -= state['speed']
 	
 	if state['state'] == "playing":

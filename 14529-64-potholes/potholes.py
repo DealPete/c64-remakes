@@ -1,7 +1,16 @@
-import c64, sys, os, pygame, time
-from random import random
+import sys
+sys.path.append("..")
 
-c64.init((608, 592))
+import time
+from random import random
+import pygame
+from c64 import C64
+
+pygame.init()
+screen = pygame.display.set_mode((608, 592))
+c64 = C64(screen)
+
+pygame.display.set_caption("64 Potholes")
 
 car = pygame.transform.scale(pygame.image.load('car.png'), (32, 32))
 car = pygame.transform.flip(car, False, True)
@@ -77,11 +86,11 @@ while True:
 			gameTime = time.time()
 			speed += 1
 
-	c64.screen.fill(c64.GREY3)
-	c64.screen.blit(left, [0, -distance % 16 - 16])
-	c64.screen.blit(right, [416, -distance % 16 - 16])
+	screen.fill(c64.GREY3)
+	screen.blit(left, [0, -distance % 16 - 16])
+	screen.blit(right, [416, -distance % 16 - 16])
 
-	c64.screen.blit(car, [carX, 10])
+	screen.blit(car, [carX, 10])
 
 	if state == "crashed":
 		c64.PRINT("Potholes - By Brent Kapilik", 7, 20, c64.BLACK)
@@ -97,7 +106,7 @@ while True:
 		if state == "driving":
 			hole[1] -= speed
 		if state != "crashed" or hole[1] < 50:
-			c64.screen.blit(pothole, hole)
+			screen.blit(pothole, hole)
 
 	if state == "driving":
 		c64.PRINT("SPEED: ", 2, 2, c64.BLACK)
