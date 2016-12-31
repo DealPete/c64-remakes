@@ -24,8 +24,8 @@ pothole = c64.SPRINT("\uE071", c64.BLACK)
 # right surface covers x=416 to x=608
 left = pygame.Surface((192, 608))
 right = pygame.Surface((192, 608))
-left.fill(c64.GREY3)
-right.fill(c64.GREY3)
+left.fill(c64.LIGHTGREY)
+right.fill(c64.LIGHTGREY)
 
 for i in range(38):
 	left.blit(grass, [0, i*16])
@@ -86,7 +86,7 @@ while True:
 			gameTime = time.time()
 			speed += 1
 
-	screen.fill(c64.GREY3)
+	screen.fill(c64.LIGHTGREY)
 	screen.blit(left, [0, -distance % 16 - 16])
 	screen.blit(right, [416, -distance % 16 - 16])
 
