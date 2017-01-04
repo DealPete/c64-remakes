@@ -2,7 +2,7 @@ import sys
 sys.path.append('..')
 from random import random
 
-BOARD_HEIGHT = 20
+BOARD_HEIGHT = 35
 
 import pygame
 pygame.init()
