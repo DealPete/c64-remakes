@@ -1,22 +1,26 @@
-import sys
+import csv, sys
 sys.path.append('..')
 from random import random
 
 BOARD_WIDTH = 10
 BOARD_HEIGHT = 30
+INFO_WIDTH = 18
+INFO_HEIGHT = BOARD_HEIGHT
 
 import pygame
 pygame.init()
-screen = pygame.display.set_mode((16*BOARD_WIDTH + 32,
-    BOARD_HEIGHT*16 + 48))
+screen = pygame.display.set_mode((16*BOARD_WIDTH + INFO_WIDTH*16 + 48,
+    BOARD_HEIGHT*16 + 32))
 pygame.display.set_caption("Polytris")
 
 from c64 import C64
 
 c64 = C64(screen)
 
+BACKGROUND_COLOR = c64.BLACK
+
 class Pentomino:
-    colors = [c64.BLACK, c64.BROWN, c64.CYAN, c64.DARKGREY,
+    colors = [c64.BLUE, c64.BROWN, c64.CYAN, c64.DARKGREY,
               c64.LIGHTRED, c64.GREEN, c64.GREY, c64.LIGHTGREEN,
               c64.LIGHTGREY, c64.ORANGE, c64.RED, c64.VIOLET,
               c64.WHITE, c64.YELLOW]
@@ -178,6 +182,12 @@ class Pentomino:
 
 class game_state:
     def __init__(self):
+        scorefile = open("hiscores.csv", "r")
+        reader = csv.reader(scorefile)
+        self.hiscores = []
+        for row in reader:
+            self.hiscores.append(row)
+        scorefile.close()
         self.start_game()
 
     def start_game(self):
@@ -185,11 +195,13 @@ class game_state:
         self.score = 0
         self.timer = 0
         self.frames_per_move = 30
-        self.board = [[c64.BLUE] * BOARD_WIDTH for y in range(BOARD_HEIGHT)]
-        self.add_new_piece()
+        self.board = [[BACKGROUND_COLOR] * BOARD_WIDTH for y in range(BOARD_HEIGHT)]
+        self.next_piece = Pentomino()
+        self.add_next_piece()
 
-    def add_new_piece(self):
-        self.piece = Pentomino()
+    def add_next_piece(self):
+        self.piece = self.next_piece
+        self.next_piece = Pentomino()
         self.X = int(random()*(BOARD_WIDTH - self.piece.size + 1))
         self.Y = 2 - self.piece.size 
 
@@ -204,7 +216,7 @@ def valid(bx, by, form):
                     return False
                 y = i + by
                 if y >= 0:
-                    if y >= BOARD_HEIGHT or state.board[y][x] != c64.BLUE:
+                    if y >= BOARD_HEIGHT or state.board[y][x] != BACKGROUND_COLOR:
                         return False
     return True
 
@@ -241,10 +253,10 @@ def get_input():
 def update_world():
     def remove_finished_lines():
         for y in range(BOARD_HEIGHT):
-            if all([block != c64.BLUE for block in state.board[y]]):
+            if all([block != BACKGROUND_COLOR for block in state.board[y]]):
                 for row in range(y-1, 0, -1):
                     state.board[row + 1] = state.board[row][:]
-                state.board[0] = [c64.BLUE] * BOARD_WIDTH
+                state.board[0] = [BACKGROUND_COLOR] * BOARD_WIDTH
                 state.score += 10
 
     def place_tile():
@@ -254,9 +266,9 @@ def update_world():
                     state.board[i + state.Y][j + state.X] = state.piece.color
         state.score += 1
         remove_finished_lines()
-        if all([x == c64.BLUE for x in state.board[0]]):
+        if all([x == BACKGROUND_COLOR for x in state.board[0]]):
             state.state = "playing"
-            state.add_new_piece()
+            state.add_next_piece()
         else:
             state.state = "lost"
 
@@ -269,26 +281,35 @@ def update_world():
                 place_tile()
 
 def draw_screen():
-    pygame.draw.rect(screen, c64.LIGHTBLUE, (0, 0, 16*BOARD_WIDTH + 32, 16*BOARD_HEIGHT + 32))
-    pygame.draw.rect(screen, c64.BLUE, (16, 16, 16*BOARD_WIDTH, 16*BOARD_HEIGHT))
-    pygame.draw.rect(screen, c64.BLACK, (0, 16*BOARD_HEIGHT + 32, 16*BOARD_WIDTH + 32, 16))
-    scoreX = 1
-    if state.score < 10: scoreX = 2
-    c64.PRINT("SCORE: " + str(state.score), scoreX, BOARD_HEIGHT + 2)
+    def draw_tile(piece, x, y):
+        for i in range(piece.size):
+            if y + i >= 0:
+                for j in range(piece.size):
+                    if piece.form[i][j] == 1:
+                        c64.PRINT("\uE220", x + j + 1, y + i + 1, piece.color)
+
+    pygame.draw.rect(screen, c64.LIGHTBLUE, (0, 0, 16*BOARD_WIDTH + 48 + 16*INFO_WIDTH, 16*BOARD_HEIGHT + 32))
+    pygame.draw.rect(screen, BACKGROUND_COLOR, (16, 16, 16*BOARD_WIDTH + 16*INFO_WIDTH + 16, 16*BOARD_HEIGHT))
+    pygame.draw.rect(screen, c64.LIGHTBLUE, (16*BOARD_WIDTH + 16, 16, 16, 16*BOARD_HEIGHT))
+    scoreX = 12 - int(len(str(state.score))/2)
+    c64.PRINT("SCORE: ", 9 + BOARD_WIDTH + 2, 4)
+    c64.PRINT(str(state.score), scoreX + BOARD_WIDTH + 2, 5)
+    c64.PRINT("HIGH SCORES:", BOARD_WIDTH + 3, 11)
+    for i in range(len(state.hiscores)):
+        c64.PRINT(state.hiscores[i][0], BOARD_WIDTH + 3, 13 + i)
+        score = str(state.hiscores[i][1])
+        c64.PRINT(score, BOARD_WIDTH + INFO_WIDTH - len(score), 13 + i)
     for x in range(BOARD_WIDTH):
         for y in range(BOARD_HEIGHT):
-            if state.board[y][x] != c64.BLUE:
+            if state.board[y][x] != BACKGROUND_COLOR:
                 c64.PRINT("\uE220", x + 1, y + 1, state.board[y][x])
-    for i in range(state.piece.size):
-        if state.Y + i >= 0:
-            for j in range(state.piece.size):
-                if state.piece.form[i][j] == 1:
-                    c64.PRINT("\uE220", state.X + j + 1,
-                        state.Y + i + 1, state.piece.color)
+    draw_tile(state.piece, state.X, state.Y)
+    draw_tile(state.next_piece,
+        BOARD_WIDTH + 3 + int((5 - state.next_piece.size)/2),
+        2 + int((5 - state.next_piece.size)/2))
     pygame.display.update()
 
 while True:
     draw_screen()
     get_input()
     update_world()
-

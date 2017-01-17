@@ -13,10 +13,11 @@ pygame.display.set_caption("Pentris")
 
 from c64 import C64
 
+BACKGROUND_COLOR = C64.BLACK
 c64 = C64(screen)
 
 class Pentomino:
-    colors = [c64.BLACK, c64.BROWN, c64.CYAN, c64.DARKGREY,
+    colors = [c64.BLUE, c64.BROWN, c64.CYAN, c64.DARKGREY,
               c64.LIGHTRED, c64.GREEN, c64.GREY, c64.LIGHTGREEN,
               c64.LIGHTGREY, c64.ORANGE, c64.RED, c64.VIOLET,
               c64.WHITE, c64.YELLOW]
@@ -143,7 +144,7 @@ class game_state:
         self.score = 0
         self.timer = 0
         self.frames_per_move = 30
-        self.board = [[c64.BLUE] * BOARD_WIDTH for y in range(BOARD_HEIGHT)]
+        self.board = [[BACKGROUND_COLOR] * BOARD_WIDTH for y in range(BOARD_HEIGHT)]
         self.add_new_piece()
 
     def add_new_piece(self):
@@ -162,7 +163,7 @@ def valid(bx, by, form):
                     return False
                 y = i + by
                 if y >= 0:
-                    if y >= BOARD_HEIGHT or state.board[y][x] != c64.BLUE:
+                    if y >= BOARD_HEIGHT or state.board[y][x] != BACKGROUND_COLOR:
                         return False
     return True
 
@@ -199,10 +200,10 @@ def get_input():
 def update_world():
     def remove_finished_lines():
         for y in range(BOARD_HEIGHT):
-            if all([block != c64.BLUE for block in state.board[y]]):
+            if all([block != BACKGROUND_COLOR for block in state.board[y]]):
                 for row in range(y-1, 0, -1):
                     state.board[row + 1] = state.board[row][:]
-                state.board[0] = [c64.BLUE] * BOARD_WIDTH
+                state.board[0] = [BACKGROUND_COLOR] * BOARD_WIDTH
                 state.score += 10
 
     def place_tile():
@@ -212,7 +213,7 @@ def update_world():
                     state.board[i + state.Y][j + state.X] = state.piece.color
         state.score += 1
         remove_finished_lines()
-        if all([x == c64.BLUE for x in state.board[0]]):
+        if all([x == BACKGROUND_COLOR for x in state.board[0]]):
             state.state = "playing"
             state.add_new_piece()
         else:
@@ -228,14 +229,14 @@ def update_world():
 
 def draw_screen():
     pygame.draw.rect(screen, c64.LIGHTBLUE, (0, 0, 16*BOARD_WIDTH + 32, 16*BOARD_HEIGHT + 32))
-    pygame.draw.rect(screen, c64.BLUE, (16, 16, 16*BOARD_WIDTH, 16*BOARD_HEIGHT))
+    pygame.draw.rect(screen, c64.BLACK, (16, 16, 16*BOARD_WIDTH, 16*BOARD_HEIGHT))
     pygame.draw.rect(screen, c64.BLACK, (0, 16*BOARD_HEIGHT + 32, 16*BOARD_WIDTH + 32, 16))
     scoreX = 1
     if state.score < 10: scoreX = 2
     c64.PRINT("SCORE: " + str(state.score), scoreX, BOARD_HEIGHT + 2)
     for x in range(BOARD_WIDTH):
         for y in range(BOARD_HEIGHT):
-            if state.board[y][x] != c64.BLUE:
+            if state.board[y][x] != BACKGROUND_COLOR:
                 c64.PRINT("\uE220", x + 1, y + 1, state.board[y][x])
     for i in range(state.piece.size):
         if state.Y + i >= 0:
