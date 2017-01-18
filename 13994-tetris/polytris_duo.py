@@ -198,7 +198,7 @@ class game_state:
         self.X = [1, BOARD_WIDTH - 6]
         self.Y = [2 - self.piece[0].size, 2 - self.piece[1].size]
         self.falling = [False, False]
-        self.frames_per_move = 30
+        self.frames_per_move = 40
         self.board = [[BACKGROUND_COLOR] * BOARD_WIDTH for y in range(BOARD_HEIGHT)]
         self.next_piece = Pentomino()
 
@@ -212,6 +212,21 @@ class game_state:
         self.Y[player] = 2 - self.piece[player].size 
 
 state = game_state()
+
+def touch_other_player(bx, by, player):
+    ox = state.X[1 - player]
+    oy = state.Y[1 - player]
+    opiece = state.piece[1 - player]
+    for i in range(state.piece[player].size):
+        for j in range(state.piece[player].size):
+            if state.piece[player].form[i][j] == 1:
+                x = j + bx
+                y = i + by
+                if x - ox >= 0 and x - ox < opiece.size \
+                    and y - oy >= 0 and y - oy < opiece.size \
+                    and opiece.form[y - oy][x - ox] == 1:
+                    return True
+    return False
 
 def valid(bx, by, form, player):
     ox = state.X[1 - player]
@@ -227,8 +242,8 @@ def valid(bx, by, form, player):
                 if y >= 0:
                     if y >= BOARD_HEIGHT or state.board[y][x] != BACKGROUND_COLOR:
                         return False
-                if x - ox > 0 and x - ox < opiece.size \
-                    and y - oy > 0 and y - oy < opiece.size \
+                if x - ox >= 0 and x - ox < opiece.size \
+                    and y - oy >= 0 and y - oy < opiece.size \
                     and opiece.form[y - oy][x - ox] == 1:
                     return False
     return True
@@ -236,39 +251,39 @@ def valid(bx, by, form, player):
 def get_input():
     for event in pygame.event.get():
         if event.type == pygame.QUIT: sys.exit()
-        if event.type == pygame.KEYUP and event.key == pygame.K_DOWN:
-            state.falling[0] = False
         if event.type == pygame.KEYUP and event.key == pygame.K_s:
+            state.falling[0] = False
+        if event.type == pygame.KEYUP and event.key == pygame.K_DOWN:
             state.falling[1] = False
         if event.type == pygame.KEYDOWN:
             if state.state == "playing":
                 if event.key == pygame.K_p:
                     state.state = "paused"
-                if event.key == pygame.K_LEFT:
+                if event.key == pygame.K_a:
                     if valid(state.X[0] - 1, state.Y[0], state.piece[0].form, 0):
                         state.X[0] -= 1
-                if event.key == pygame.K_RIGHT:
+                if event.key == pygame.K_d:
                     if valid(state.X[0] + 1, state.Y[0], state.piece[0].form, 0):
                         state.X[0] += 1
-                if event.key == pygame.K_a:
+                if event.key == pygame.K_LEFT:
                     if valid(state.X[1] - 1, state.Y[1], state.piece[1].form, 1):
                         state.X[1] -= 1
-                if event.key == pygame.K_d:
+                if event.key == pygame.K_RIGHT:
                     if valid(state.X[1] + 1, state.Y[1], state.piece[1].form, 1):
                         state.X[1] += 1
-                if event.key == pygame.K_UP:
+                if event.key == pygame.K_w:
                     new_form = Pentomino.rotate_right(state.piece[0].form,
                         state.piece[0].size)
                     if valid(state.X[0], state.Y[0], new_form, 0):
                         state.piece[0].form = new_form
-                if event.key == pygame.K_w:
+                if event.key == pygame.K_UP:
                     new_form = Pentomino.rotate_right(state.piece[1].form,
                         state.piece[1].size)
                     if valid(state.X[1], state.Y[1], new_form, 1):
                         state.piece[1].form = new_form
-                if event.key == pygame.K_DOWN:
-                    state.falling[0] = True
                 if event.key == pygame.K_s:
+                    state.falling[0] = True
+                if event.key == pygame.K_DOWN:
                     state.falling[1] = True
             elif state.state == "paused":
                 if event.key == pygame.K_p:
@@ -335,11 +350,13 @@ def update_world():
         state.timer += 1
         for player in range(2):
             if state.falling[player] or state.timer % state.frames_per_move == 0:
-                if valid(state.X[player], state.Y[player] + 1, \
-                    state.piece[player].form, player):
-                    state.Y[player] += 1
-                else:
-                    place_tile(player)
+                if not touch_other_player(state.X[player], state.Y[player] + 1, \
+                    player):
+                    if valid(state.X[player], state.Y[player] + 1, \
+                        state.piece[player].form, player):
+                        state.Y[player] += 1
+                    else:
+                        place_tile(player)
 
 def draw_screen():
     def draw_tile(piece, x, y):
