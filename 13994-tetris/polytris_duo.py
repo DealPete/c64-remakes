@@ -4,7 +4,7 @@ from random import random
 
 BOARD_WIDTH = 10
 BOARD_HEIGHT = 30
-INFO_WIDTH = 18
+INFO_WIDTH = 25
 INFO_HEIGHT = BOARD_HEIGHT
 
 import pygame
@@ -182,7 +182,7 @@ class Pentomino:
 
 class game_state:
     def __init__(self):
-        scorefile = open("hiscores.csv", "r")
+        scorefile = open("hiscores_duo.csv", "r")
         reader = csv.reader(scorefile)
         self.hiscores = []
         for row in reader:
@@ -194,22 +194,31 @@ class game_state:
         self.state = "playing"
         self.score = 0
         self.timer = 0
+        self.piece = [Pentomino(), Pentomino()]
+        self.X = [1, BOARD_WIDTH - 6]
+        self.Y = [2 - self.piece[0].size, 2 - self.piece[1].size]
+        self.falling = [False, False]
         self.frames_per_move = 30
         self.board = [[BACKGROUND_COLOR] * BOARD_WIDTH for y in range(BOARD_HEIGHT)]
         self.next_piece = Pentomino()
-        self.add_next_piece()
 
-    def add_next_piece(self):
-        self.piece = self.next_piece
+    def add_next_piece(self, player):
+        self.piece[player] = self.next_piece
         self.next_piece = Pentomino()
-        self.X = int(random()*(BOARD_WIDTH - self.piece.size + 1))
-        self.Y = 2 - self.piece.size 
+        if player == 0:
+            self.X[player] = 1
+        else:
+            self.X[player] = BOARD_WIDTH - 6
+        self.Y[player] = 2 - self.piece[player].size 
 
 state = game_state()
 
-def valid(bx, by, form):
-    for i in range(state.piece.size):
-        for j in range(state.piece.size):
+def valid(bx, by, form, player):
+    ox = state.X[1 - player]
+    oy = state.Y[1 - player]
+    opiece = state.piece[1 - player]
+    for i in range(state.piece[player].size):
+        for j in range(state.piece[player].size):
             if form[i][j] == 1:
                 x = j + bx
                 if x < 0 or x >= BOARD_WIDTH:
@@ -218,31 +227,49 @@ def valid(bx, by, form):
                 if y >= 0:
                     if y >= BOARD_HEIGHT or state.board[y][x] != BACKGROUND_COLOR:
                         return False
+                if x - ox > 0 and x - ox < opiece.size \
+                    and y - oy > 0 and y - oy < opiece.size \
+                    and opiece.form[y - oy][x - ox] == 1:
+                    return False
     return True
 
 def get_input():
     for event in pygame.event.get():
         if event.type == pygame.QUIT: sys.exit()
-        if event.type == pygame.KEYUP and event.key == pygame.K_DOWN \
-            and state.state == "falling":
-            state.state = "playing"
+        if event.type == pygame.KEYUP and event.key == pygame.K_DOWN:
+            state.falling[0] = False
+        if event.type == pygame.KEYUP and event.key == pygame.K_s:
+            state.falling[1] = False
         if event.type == pygame.KEYDOWN:
             if state.state == "playing":
                 if event.key == pygame.K_p:
                     state.state = "paused"
                 if event.key == pygame.K_LEFT:
-                    if valid(state.X - 1, state.Y, state.piece.form):
-                        state.X -= 1
+                    if valid(state.X[0] - 1, state.Y[0], state.piece[0].form, 0):
+                        state.X[0] -= 1
                 if event.key == pygame.K_RIGHT:
-                    if valid(state.X + 1, state.Y, state.piece.form):
-                        state.X += 1
-                if event.key == pygame.K_UP or event.key == pygame.K_SPACE:
-                    new_form = Pentomino.rotate_right(state.piece.form,
-                        state.piece.size)
-                    if valid(state.X, state.Y, new_form):
-                        state.piece.form = new_form
+                    if valid(state.X[0] + 1, state.Y[0], state.piece[0].form, 0):
+                        state.X[0] += 1
+                if event.key == pygame.K_a:
+                    if valid(state.X[1] - 1, state.Y[1], state.piece[1].form, 1):
+                        state.X[1] -= 1
+                if event.key == pygame.K_d:
+                    if valid(state.X[1] + 1, state.Y[1], state.piece[1].form, 1):
+                        state.X[1] += 1
+                if event.key == pygame.K_UP:
+                    new_form = Pentomino.rotate_right(state.piece[0].form,
+                        state.piece[0].size)
+                    if valid(state.X[0], state.Y[0], new_form, 0):
+                        state.piece[0].form = new_form
+                if event.key == pygame.K_w:
+                    new_form = Pentomino.rotate_right(state.piece[1].form,
+                        state.piece[1].size)
+                    if valid(state.X[1], state.Y[1], new_form, 1):
+                        state.piece[1].form = new_form
                 if event.key == pygame.K_DOWN:
-                    state.state = "falling"
+                    state.falling[0] = True
+                if event.key == pygame.K_s:
+                    state.falling[1] = True
             elif state.state == "paused":
                 if event.key == pygame.K_p:
                     state.state = "playing"
@@ -252,7 +279,7 @@ def get_input():
                     state.hiscores[state.scorepos][0] = \
                         state.hiscores[state.scorepos][0][:state.cursorpos]
                 elif event.key == pygame.K_RETURN:
-                    scorefile = open("hiscores.csv", "w")
+                    scorefile = open("hiscores_duo.csv", "w")
                     writer = csv.writer(scorefile, quoting=csv.QUOTE_NONNUMERIC)
                     for row in state.hiscores:
                         writer.writerow(row)
@@ -277,16 +304,17 @@ def update_world():
                 state.board[0] = [BACKGROUND_COLOR] * BOARD_WIDTH
                 state.score += 10
 
-    def place_tile():
-        for i in range(state.piece.size):
-            for j in range(state.piece.size):
-                if state.piece.form[i][j] == 1 and i + state.Y >= 0:
-                    state.board[i + state.Y][j + state.X] = state.piece.color
+    def place_tile(player):
+        for i in range(state.piece[player].size):
+            for j in range(state.piece[player].size):
+                if state.piece[player].form[i][j] == 1 and i + state.Y[player] >= 0:
+                    state.board[i + state.Y[player]][j + state.X[player]] \
+                        = state.piece[player].color
         state.score += 1
         remove_finished_lines()
         if all([x == BACKGROUND_COLOR for x in state.board[0]]):
             state.state = "playing"
-            state.add_next_piece()
+            state.add_next_piece(player)
         else:
             scorepos = -1
             for i in range(len(state.hiscores)):
@@ -303,13 +331,15 @@ def update_world():
                 state.hiscores = state.hiscores[:scorepos] \
                     + [["", str(state.score)]] + state.hiscores[scorepos:]
 
-    if state.state == "playing" or state.state == "falling":
+    if state.state == "playing":
         state.timer += 1
-        if state.timer % state.frames_per_move == 0 or state.state == "falling":
-            if valid(state.X, state.Y + 1, state.piece.form):
-                state.Y += 1
-            else:
-                place_tile()
+        for player in range(2):
+            if state.falling[player] or state.timer % state.frames_per_move == 0:
+                if valid(state.X[player], state.Y[player] + 1, \
+                    state.piece[player].form, player):
+                    state.Y[player] += 1
+                else:
+                    place_tile(player)
 
 def draw_screen():
     def draw_tile(piece, x, y):
@@ -341,7 +371,8 @@ def draw_screen():
         for y in range(BOARD_HEIGHT):
             if state.board[y][x] != BACKGROUND_COLOR:
                 c64.PRINT("\uE220", x + 1, y + 1, state.board[y][x])
-    draw_tile(state.piece, state.X, state.Y)
+    draw_tile(state.piece[0], state.X[0], state.Y[0])
+    draw_tile(state.piece[1], state.X[1], state.Y[1])
     pygame.display.update()
 
 while True:
