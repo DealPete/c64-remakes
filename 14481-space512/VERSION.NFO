@@ -1,23 +1,23 @@
 ==============================================================================
 GB-Version:        1
-Filename:          0\64VALLEY_00072_01.zip
-Screenshot:        0\64_Valley_of_Death.gif
+Filename:          s2\SPACE512_14481_01.zip
+Screenshot:        S\Space512.gif
 Sid:               
 ==============================================================================
 
 ==============================================================================
 GAME INFO:
 ------------------------------------------------------------------------------
-Unique-ID:         72
-Name:              64 Valley of Death
-Published:         19?? (Unknown)
-Programmer:        (Unknown)
+Unique-ID:         14481
+Name:              Space512
+Published:         2001 (Public Domain)
+Programmer:        Per Olofsson (MagerValp)
 Musician:          (None)
 Language:          English
-Genre:             Racing - Stay on Track
+Genre:             Shoot'em Up - Space Invaders
 Players:           1P Only
-Control:           Joystick Port 2
-Comment:           
+Control:           Keyboard
+Comment:           Minigame Competition 2001 - 512 Byte Category
 ==============================================================================
 
 ==============================================================================
@@ -31,12 +31,12 @@ Loading Screen:    No
 Included Docs:     No
 True Drive Emul.:  No
 Pal/NTSC:          PAL(+NTSC?)
-Comment:           
+Comment:           use LIST to display score
 ==============================================================================
 
 ==============================================================================
 NOTES:
 ------------------------------------------------------------------------------
-
+http://demo.raww.net/minigame/
 ==============================================================================
 

@@ -1,0 +1,362 @@
+.C:080b  A9 00       LDA #$00
+.C:080d  8D 03 08    STA $0803
+.C:0810  8D 04 08    STA $0804
+$803 = $804 = 0 (note this clobbers the line number of the basic program)
+
+.C:0813  A0 81       LDY #$81
+.C:0815  8C 12 D4    STY $D412
+Start voice 3, select noise
+.C:0818  8C 0F D4    STY $D40F
+voice 3 volume $81
+
+.C:080b  A9 00       LDA #$00
+.C:081b  A8          TAY
+.C:081c  99 00 3F    STA $3F00,Y
+.C:081f  99 00 39    STA $3900,Y
+.C:0822  C8          INY
+.C:0823  D0 F7       BNE $081C
+Set $3F00 through $3FFF and $3900 through $39FF to 0
+
+.C:0825  A2 07       LDX #$07
+.C:0827  8E 15 D0    STX $D015
+Enables sprites 1, 2, and 3.
+
+.C:082a  A9 01       LDA #$01
+.C:082f  9D 27 D0    STA $D027,X
+Sprite 7 is white?
+
+.C:0832  BD E0 09    LDA $09E0,X
+.C:0835  20 D2 FF    JSR $FFD2
+Write blank character to screen?
+
+.C:0838  BD F5 09    LDA $09F5,X
+.C:083b  9D 00 D0    STA $D000,X
+Sprite3y is E8
+
+.C:083e  A9 00       LDA #$00
+.C:0840  9D 20 D0    STA $D020,X
+Sprite 0 is black?
+
+.C:0843  95 4F       STA $4F,X
+$56 <- 0
+
+.C:0848  BD ED 09    LDA $09ED,X
+.C:084b  9D 18 39    STA $3918,X
+$391f <- 6
+
+.C:084e  BD F7 09    LDA $09F7,X
+.C:0851  9D 20 39    STA $3920,X
+$3927 <- c0
+
+.C:0854  BD E5 09    LDA $09E5,X
+.C:0857  9D 81 3F    STA $3F81,X
+$3f88 <- 7e
+
+.C:085a  A9 FF       LDA #$FF
+.C:085c  8D 06 D4    STA $D406
+.C:085f  8D 0D D4    STA $D40D
+Voices #1 and #2 release 24s, volume max
+
+.C:0862  9D 89 3F    STA $3F89,X
+.C:0865  9D 90 3F    STA $3F90,X
+.C:0868  9D F8 07    STA $07F8,X
+$3F90, $3F97, $7ff <- ff
+
+.C:086b  A9 08       LDA #$08
+.C:086d  99 C1 3F    STA $3FC1,Y
+$3fc1 <- 8
+
+.C:0870  C8          INY
+.C:0871  C8          INY
+.C:0872  C8          INY
+$y += 3
+
+.C:0873  CA          DEX
+.C:0874  10 B4       BPL $082A
+.C:0876  CA          DEX
+.C:0877  8E F8 07    STX $07F8
+.C:087a  A9 1F       LDA #$1F
+.C:087c  8D 18 D0    STA $D018
+Character dot-data area D
+
+.C:087f  8D 18 D4    STA $D418
+Max volume, enable low- and band-pass filters?
+
+.C:0882  A0 03       LDY #$03
+.C:0884  A2 13       LDX #$13
+.C:0886  BD CF 09    LDA $09CF,X
+.C:0889  20 D2 FF    JSR $FFD2
+.C:088c  CA          DEX
+.C:088d  10 F7       BPL $0886
+.C:088f  88          DEY
+.C:0890  D0 F2       BNE $0884
+Display three rows of aliens.
+
+.C:0892  A9 F9       LDA #$F9
+.C:0894  85 51       STA $51
+$51 = 0xf9
+
+.C:0896  A9 12       LDA #$12
+.C:0898  85 4F       STA $4F
+.C:089a  85 50       STA $50
+$4F = $50 = 0x12
+
+forever {
+	.C:089c  A9 FB       LDA #$FB
+	.C:089e  CD 12 D0    CMP $D012
+	.C:08a1  D0 FB       BNE $089E
+	Wait for screen to draw.
+
+	.C:08a3  A5 53       LDA $53
+	.C:08a5  F0 02       BEQ $08A9
+	.C:08a7  C6 53       DEC $53
+	.C:08a9  8D 01 D4    STA $D401
+	Decrease frequency of voice #1 (if > 0)
+
+	.C:08ac  A5 54       LDA $54
+	.C:08ae  F0 02       BEQ $08B2
+	.C:08b0  C6 54       DEC $54
+	.C:08b2  8D 08 D4    STA $D408
+	Decrease frequency of voice #2 (if > 0)
+
+	.C:08b5  AD 03 D0    LDA $D003
+	.C:08b8  F0 05       BEQ $08BF
+	.C:08ba  E9 04       SBC #$04
+	.C:08bc  8D 03 D0    STA $D003
+	if missile1 y > 0, missile1 y -= 4
+
+	.C:08bf  AD 05 D0    LDA $D005
+	.C:08c2  D0 28       BNE $08EC
+	If missile2 y = 0 {
+		.C:08c4  AE 1B D4    LDX $D41B
+		x = rand(255)
+
+		.C:08c7  BD A0 04    LDA $04A0,X
+		.C:08ca  C9 20       CMP #$20
+		.C:08cc  F0 2B       BEQ $08F9
+		goto $8F9 if no invader at x line
+
+		.C:08ce  8A          TXA
+		a = x
+
+		.C:08cf  A0 00       LDY #$00
+		y = 0
+
+		.C:08d1  C9 28       CMP #$28
+		.C:08d3  90 06       BCC $08DB
+		.C:08d5  C8          INY
+		.C:08d6  38          SEC
+		.C:08d7  E9 28       SBC #$28
+		.C:08d9  B0 F6       BCS $08D1
+		y = a // 40
+		a = a % 40
+
+		.C:08db  0A          ASL A
+		.C:08dc  69 06       ADC #$06
+		.C:08de  0A          ASL A
+		.C:08df  0A          ASL A
+		.C:08e0  8D 04 D0    STA $D004
+		missile2 x = 8a + 24 
+
+		.C:08e3  98          TYA
+		.C:08e4  0A          ASL A
+		.C:08e5  0A          ASL A
+		.C:08e6  0A          ASL A
+		.C:08e7  69 54       ADC #$54
+		.C:08e9  8D 05 D0    STA $D005
+		missile2 y = 8y + 0x54
+	}
+
+	.C:08ec  EE 05 D0    INC $D005
+	.C:08ef  EE 05 D0    INC $D005
+	missile2 y += 2
+
+	.C:08f2  AD 1E D0    LDA $D01E
+	.C:08f5  29 01       AND #$01
+	.C:08f7  D0 D7       BNE $08D0
+	end game if missile hits defender
+
+	.C:08f9  AD 1F D0    LDA $D01F
+	.C:08fc  29 02       AND #$02
+	.C:08fe  F0 3A       BEQ $093A
+
+	if missile1 hits alien {
+		.C:0900  A2 07       LDX #$07
+		.C:0902  86 54       STX $54
+		voice 2 volume = 7
+		.C:0904  A0 81       LDY #$81
+		.C:0906  20 C5 09    JSR $09C5
+		call VOICE(7, 0x81) // noise waveform
+
+		.C:0909  EE 03 08    INC $0803
+		.C:090c  D0 03       BNE $0911
+		.C:090e  EE 04 08    INC $0804
+		$803:$804 += 1
+
+		.C:0911  C6 4F       DEC $4F
+		$4F -= 1
+
+		.C:0913  D0 03       BNE $0918
+		.C:0915  4C 0B 08    JMP $080B
+		Restart game if all aliens are dead!
+
+		.C:0918  AD 03 D0    LDA $D003
+		.C:091b  38          SEC
+		.C:091c  E9 32       SBC #$32
+		.C:091e  4A          LSR A
+		.C:091f  4A          LSR A
+		.C:0920  4A          LSR A
+		.C:0921  AA          TAX
+		x = invader hit by missile x pos
+
+		.C:0922  AD 02 D0    LDA $D002
+		.C:0925  4A          LSR A
+		.C:0926  E9 11       SBC #$11
+		.C:0928  4A          LSR A
+		.C:0929  4A          LSR A
+		.C:092a  A8          TAY
+		.C:092b  C8          INY
+		.C:092c  C8          INY
+		y = invader hit by missile y pos
+
+		.C:092d  18          CLC
+		.C:092e  20 B7 09    JSR $09B7
+		call DESTROY_INVADER(x, y)
+
+		.C:0931  E8          INX
+		.C:0932  20 B7 09    JSR $09B7
+		call DESTROY_INVADER(x + 1, y)
+
+		.C:0935  A9 00       LDA #$00
+		.C:0937  8D 03 D0    STA $D003
+		move missile1 off screen
+	}
+
+	.C:093a  C6 50       DEC $50
+	$50 -= 1
+
+	.C:093c  D0 34       BNE $0972
+
+	if ($50 == 0) {
+		.C:093e  A9 10       LDA #$10
+		.C:0940  85 50       STA $50
+		$50 = 16
+
+		.C:0942  A2 00       LDX #$00
+		.C:0944  A5 52       LDA $52
+		.C:0946  D0 17       BNE $095F
+		
+		if ($52 == 0) {
+			.C:0948  BD 9E 04    LDA $049E,X
+			.C:094b  9D 9F 04    STA $049F,X
+			.C:094e  CA          DEX
+			.C:094f  D0 F7       BNE $0948
+			move all aliens to the right
+
+			.C:0951  E6 51       INC $51
+			$51 += 1
+
+			.C:0953  A5 51       LDA $51
+			.C:0955  C9 08       CMP #$08
+			.C:0957  D0 19       BNE $0972
+
+			if ($51 == 8) {
+				.C:0959  A9 01       LDA #$01
+				.C:095b  85 52       STA $52
+				$52 = 1
+			}
+
+			.C:095d  D0 13       BNE $0972
+
+		} else {
+
+			.C:095f  BD A0 04    LDA $04A0,X
+			.C:0962  9D 9F 04    STA $049F,X
+			.C:0965  E8          INX
+			.C:0966  D0 F7       BNE $095F
+			move all aliens to the left
+
+			.C:0968  C6 51       DEC $51
+			$51 -= 1
+
+			.C:096a  A5 51       LDA $51
+			.C:096c  C9 F9       CMP #$F9
+			.C:096e  D0 02       BNE $0972
+			.C:0970  86 52       STX $52
+			if ($51 == -7)
+				$52 = 0
+		}
+	}
+
+	.C:0972  AD 8D 02    LDA $028D
+	.C:0975  F0 19       BEQ $0990
+	.C:0977  AD 03 D0    LDA $D003
+	.C:097a  D0 14       BNE $0990
+
+	if (shift is pressed and missile1 not on screen) {
+		.C:097c  A9 E8       LDA #$E8
+		.C:097e  8D 03 D0    STA $D003
+		missile1 y-pos = 0xe8
+
+		.C:0981  A2 00       LDX #$00
+		.C:0983  A0 21       LDY #$21
+		.C:0985  84 53       STY $53
+		voice 1 volume = 0x21
+
+		.C:0987  20 C5 09    JSR $09C5
+		call VOICE(0, 0x21) // sawtooth waveform
+
+		.C:098a  AD 00 D0    LDA $D000
+		.C:098d  8D 02 D0    STA $D002
+		missile1 x-pos = defender x-pos
+	}
+
+	.C:0990  A5 C5       LDA $C5
+	.C:0992  C9 0A       CMP #$0A
+	.C:0994  D0 0E       BNE $09A4
+
+	if (a is pressed) {
+		.C:0996  AD 00 D0    LDA $D000
+		.C:0999  E9 02       SBC #$02
+		.C:099b  C9 16       CMP #$16
+		.C:099d  D0 02       BNE $09A1
+		.C:099f  A9 18       LDA #$18
+		.C:09a1  8D 00 D0    STA $D000
+		move defender to the left
+	}
+
+	.C:09a4  C9 0D       CMP #$0D
+	.C:09a6  D0 0C       BNE $09B4
+
+	if (s is pressed) {
+		.C:09a8  AD 00 D0    LDA $D000
+		.C:09ab  69 01       ADC #$01
+		.C:09ad  D0 02       BNE $09B1
+		.C:09af  A9 FE       LDA #$FE
+		.C:09b1  8D 00 D0    STA $D000
+		move defender to the right
+	}
+
+	.C:09b4  4C 9C 08    JMP $089C
+}
+
+procedure DESTROY_INVADER {
+	.C:09b7  20 F0 FF    JSR $FFF0
+	move cursor to (x, y)
+
+	.C:09ba  A9 20       LDA #$20
+	.C:09bc  20 D2 FF    JSR $FFD2
+	.C:09bf  20 D2 FF    JSR $FFD2
+	.C:09c2  4C D2 FF    JMP $FFD2
+	output three spaces (chr 20)
+}
+
+.C:09c5  A9 00       LDA #$00
+.C:09c7  9D 04 D4    STA $D404,X
+.C:09ca  98          TYA
+.C:09cb  9D 04 D4    STA $D404,X
+.C:09ce  60          RTS
+procedure VOICE {
+	X = voice * 7
+	set control register for voice to Y
+}

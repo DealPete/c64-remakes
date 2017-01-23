@@ -1,0 +1,27 @@
+$[3f00-3fff] = $[3900-39ff] = 0
+
+sprites 1, 2, 3 on
+
+black border
+black background
+clear screen
+
+all sprites are white
+
+sprites y-pos = {8c f2 20 40  e0 b0 f8 e8}
+$[4f-56] = 0
+$3918 = {08 04 0f 1b  3f 2f 28 06}
+$3920 = {20 40 e0 b0  f8 e8 28 c0}
+$3f81 = {18 00 00 3c  00 7e 7e 7e}
+
+Voices #1 and #2 release 24s, volume max
+
+$[3f89-3f98] = ff
+
+$3fc1 = $3fc4 = $3fc7 = $3fca = $3fcd = $3fd0 = $3fd3 = $3fd6 = 8
+
+Sprite 0 at $3f90.
+
+$4F = number of aliens
+$53 = frequency of voice 1
+$54 = frequency of voice 2
