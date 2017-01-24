@@ -1,5 +1,5 @@
 import sys
-sys.path.append('..')
+sys.path.append('../..')
 
 import math, time
 from random import random
@@ -14,7 +14,7 @@ c64 = C64(screen)
 
 pygame.display.set_caption("Tunnel Journey")
 
-ship = pygame.image.load('../00072-64-valley-of-death/ship.png')
+ship = pygame.image.load('ship-72.png')
 ship_mask = pygame.mask.from_surface(ship)
 
 walls = pygame.Surface((640, 592), pygame.SRCALPHA)

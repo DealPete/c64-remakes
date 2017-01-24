@@ -1,5 +1,5 @@
 import csv, sys
-sys.path.append('..')
+sys.path.append('../..')
 from random import random
 
 BOARD_WIDTH = 10

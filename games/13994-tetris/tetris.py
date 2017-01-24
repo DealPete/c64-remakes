@@ -1,5 +1,5 @@
 import sys
-sys.path.append('..')
+sys.path.append('../..')
 from random import random
 
 BOARD_HEIGHT = 35

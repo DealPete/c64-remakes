@@ -20,8 +20,8 @@ class C64:
 
     def __init__(self, screen):
         self.screen = screen
-        self.petscii = pygame.font.Font("../C64_Pro_Mono-STYLE.ttf", 16)
-        self.variable_width_petscii = pygame.font.Font("../C64_Pro-STYLE.ttf", 16)
+        self.petscii = pygame.font.Font("../../C64_Pro_Mono-STYLE.ttf", 16)
+        self.variable_width_petscii = pygame.font.Font("../../C64_Pro-STYLE.ttf", 16)
 
     def SPRINT(self, text, color=WHITE):
         return self.petscii.render(text, False, color)

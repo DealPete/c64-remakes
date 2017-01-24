@@ -1,26 +1,69 @@
-import sys
-sys.path.append('..')
+import csv, sys
+sys.path.append('../..')
 from random import random
 
 BOARD_WIDTH = 10
 BOARD_HEIGHT = 30
+INFO_WIDTH = 18
+INFO_HEIGHT = BOARD_HEIGHT
 
 import pygame
 pygame.init()
-screen = pygame.display.set_mode((16*BOARD_WIDTH + 32,
-    BOARD_HEIGHT*16 + 48))
-pygame.display.set_caption("Pentris")
+screen = pygame.display.set_mode((16*BOARD_WIDTH + INFO_WIDTH*16 + 48,
+    BOARD_HEIGHT*16 + 32))
+pygame.display.set_caption("Polytris")
 
 from c64 import C64
 
-BACKGROUND_COLOR = C64.BLACK
 c64 = C64(screen)
+
+BACKGROUND_COLOR = c64.BLACK
 
 class Pentomino:
     colors = [c64.BLUE, c64.BROWN, c64.CYAN, c64.DARKGREY,
               c64.LIGHTRED, c64.GREEN, c64.GREY, c64.LIGHTGREEN,
               c64.LIGHTGREY, c64.ORANGE, c64.RED, c64.VIOLET,
               c64.WHITE, c64.YELLOW]
+
+    I1 = [[1]]
+
+    I2 = [[0, 1],
+          [0, 1]]
+
+    I3 = [[0, 1, 0],
+          [0, 1, 0],
+          [0, 1, 0]]
+
+    L3 = [[1, 0],
+          [1, 1]]
+
+    I4 = [[0, 0, 1, 0],
+          [0, 0, 1, 0],
+          [0, 0, 1, 0],
+          [0, 0, 1, 0]]
+
+    J4 = [[1, 0, 0],
+          [1, 1, 1],
+          [0, 0, 0]]
+
+    L4 = [[0, 0, 1],
+          [1, 1, 1],
+          [0, 0, 0]]
+
+    O4 = [[1, 1],
+          [1, 1]]
+
+    S4 = [[0, 1, 1],
+          [1, 1, 0],
+          [0, 0, 0]]
+
+    T4 = [[0, 1, 0],
+          [1, 1, 1],
+          [0, 0, 0]]
+
+    Z4 = [[1, 1, 0],
+          [0, 1, 1],
+          [0, 0, 0]]
 
     F = [[0, 1, 1],
          [1, 1, 0],
@@ -102,7 +145,9 @@ class Pentomino:
           [0, 1, 0],
           [1, 1, 0]]
 
-    variants = [(F, 3), (FR, 3), (I, 5), (J, 4), (L, 4), (N, 4),
+    variants = [(I1, 1), (I2, 2), (I3, 3), (L3, 2), (I4, 4), (J4, 3),
+                (L4, 3), (O4, 2), (S4, 3), (T4, 3), (Z4, 3), (F, 3),
+                (FR, 3), (I, 5), (J, 4), (L, 4), (N, 4),
                 (NR, 4), (P, 3), (PR, 3), (T, 3), (U, 3), (V, 3),
                 (W, 3), (X, 3), (Y, 4), (YR, 4), (Z, 3), (ZR, 3)]
 
@@ -137,6 +182,12 @@ class Pentomino:
 
 class game_state:
     def __init__(self):
+        scorefile = open("hiscores.csv", "r")
+        reader = csv.reader(scorefile)
+        self.hiscores = []
+        for row in reader:
+            self.hiscores.append(row)
+        scorefile.close()
         self.start_game()
 
     def start_game(self):
@@ -145,10 +196,12 @@ class game_state:
         self.timer = 0
         self.frames_per_move = 30
         self.board = [[BACKGROUND_COLOR] * BOARD_WIDTH for y in range(BOARD_HEIGHT)]
-        self.add_new_piece()
+        self.next_piece = Pentomino()
+        self.add_next_piece()
 
-    def add_new_piece(self):
-        self.piece = Pentomino()
+    def add_next_piece(self):
+        self.piece = self.next_piece
+        self.next_piece = Pentomino()
         self.X = int(random()*(BOARD_WIDTH - self.piece.size + 1))
         self.Y = 2 - self.piece.size 
 
@@ -193,6 +246,24 @@ def get_input():
             elif state.state == "paused":
                 if event.key == pygame.K_p:
                     state.state = "playing"
+            elif state.state == "entering high score":
+                if event.key == pygame.K_BACKSPACE and state.cursorpos > 0:
+                    state.cursorpos -= 1
+                    state.hiscores[state.scorepos][0] = \
+                        state.hiscores[state.scorepos][0][:state.cursorpos]
+                elif event.key == pygame.K_RETURN:
+                    scorefile = open("hiscores.csv", "w")
+                    writer = csv.writer(scorefile, quoting=csv.QUOTE_NONNUMERIC)
+                    for row in state.hiscores:
+                        writer.writerow(row)
+                    scorefile.close()
+                    state.start_game()
+                elif (event.unicode.isalpha() or event.key == pygame.K_SPACE) \
+                    and state.cursorpos < INFO_WIDTH - 3 - len(str(state.score)):
+                    state.hiscores[state.scorepos][0] = \
+                        state.hiscores[state.scorepos][0][:state.cursorpos] \
+                        + event.unicode
+                    state.cursorpos += 1
             elif state.state == "lost":
                 if event.key in [pygame.K_SPACE, pygame.K_RETURN]:
                     state.start_game()
@@ -215,9 +286,22 @@ def update_world():
         remove_finished_lines()
         if all([x == BACKGROUND_COLOR for x in state.board[0]]):
             state.state = "playing"
-            state.add_new_piece()
+            state.add_next_piece()
         else:
-            state.state = "lost"
+            scorepos = -1
+            for i in range(len(state.hiscores)):
+                if state.score > int(state.hiscores[len(state.hiscores) - i - 1][1]):
+                    scorepos = len(state.hiscores) - i - 1
+            if scorepos == -1 and len(state.hiscores) < INFO_HEIGHT - 13:
+                scorepos = len(state.hiscores)
+            if scorepos == -1:
+                state.state = "lost"
+            else:
+                state.state = "entering high score"
+                state.scorepos = scorepos
+                state.cursorpos = 0
+                state.hiscores = state.hiscores[:scorepos] \
+                    + [["", str(state.score)]] + state.hiscores[scorepos:]
 
     if state.state == "playing" or state.state == "falling":
         state.timer += 1
@@ -228,26 +312,39 @@ def update_world():
                 place_tile()
 
 def draw_screen():
-    pygame.draw.rect(screen, c64.LIGHTBLUE, (0, 0, 16*BOARD_WIDTH + 32, 16*BOARD_HEIGHT + 32))
-    pygame.draw.rect(screen, c64.BLACK, (16, 16, 16*BOARD_WIDTH, 16*BOARD_HEIGHT))
-    pygame.draw.rect(screen, c64.BLACK, (0, 16*BOARD_HEIGHT + 32, 16*BOARD_WIDTH + 32, 16))
-    scoreX = 1
-    if state.score < 10: scoreX = 2
-    c64.PRINT("SCORE: " + str(state.score), scoreX, BOARD_HEIGHT + 2)
+    def draw_tile(piece, x, y):
+        for i in range(piece.size):
+            if y + i >= 0:
+                for j in range(piece.size):
+                    if piece.form[i][j] == 1:
+                        c64.PRINT("\uE220", x + j + 1, y + i + 1, piece.color)
+
+    pygame.draw.rect(screen, c64.LIGHTBLUE, (0, 0, 16*BOARD_WIDTH + 48 + 16*INFO_WIDTH, 16*BOARD_HEIGHT + 32))
+    pygame.draw.rect(screen, BACKGROUND_COLOR, (16, 16, 16*BOARD_WIDTH + 16*INFO_WIDTH + 16, 16*BOARD_HEIGHT))
+    pygame.draw.rect(screen, c64.LIGHTBLUE, (16*BOARD_WIDTH + 16, 16, 16, 16*BOARD_HEIGHT))
+    if state.state != "entering high score":
+        draw_tile(state.next_piece,
+            BOARD_WIDTH + 3 + int((5 - state.next_piece.size)/2),
+            2 + int((5 - state.next_piece.size)/2))
+        scoreX = 12 - int(len(str(state.score))/2)
+        c64.PRINT("SCORE: ", 9 + BOARD_WIDTH + 2, 4)
+        c64.PRINT(str(state.score), scoreX + BOARD_WIDTH + 2, 5)
+    else:
+        c64.PRINT("Congratulations!", BOARD_WIDTH + 3, 4)
+        c64.PRINT("Enter your score", BOARD_WIDTH + 3, 5)
+    c64.PRINT("HIGH SCORES:", BOARD_WIDTH + 3, 11)
+    for i in range(len(state.hiscores)):
+        c64.PRINT(state.hiscores[i][0], BOARD_WIDTH + 3, 13 + i)
+        score = state.hiscores[i][1]
+        c64.PRINT(score, BOARD_WIDTH + INFO_WIDTH - len(score) + 1, 13 + i)
     for x in range(BOARD_WIDTH):
         for y in range(BOARD_HEIGHT):
             if state.board[y][x] != BACKGROUND_COLOR:
                 c64.PRINT("\uE220", x + 1, y + 1, state.board[y][x])
-    for i in range(state.piece.size):
-        if state.Y + i >= 0:
-            for j in range(state.piece.size):
-                if state.piece.form[i][j] == 1:
-                    c64.PRINT("\uE220", state.X + j + 1,
-                        state.Y + i + 1, state.piece.color)
+    draw_tile(state.piece, state.X, state.Y)
     pygame.display.update()
 
 while True:
     draw_screen()
     get_input()
     update_world()
-
