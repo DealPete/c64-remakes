@@ -6,12 +6,14 @@ BOARD_WIDTH = 10
 BOARD_HEIGHT = 30
 INFO_WIDTH = 18
 INFO_HEIGHT = BOARD_HEIGHT
+FPS = 60
 
 import pygame
 pygame.init()
 screen = pygame.display.set_mode((16*BOARD_WIDTH + INFO_WIDTH*16 + 48,
     BOARD_HEIGHT*16 + 32))
 pygame.display.set_caption("Polytris")
+clock = pygame.time.Clock()
 
 from c64 import C64
 
@@ -19,7 +21,7 @@ c64 = C64(screen)
 
 BACKGROUND_COLOR = c64.BLACK
 
-class Pentomino:
+class Polyomino:
     colors = [c64.BLUE, c64.BROWN, c64.CYAN, c64.DARKGREY,
               c64.LIGHTRED, c64.GREEN, c64.GREY, c64.LIGHTGREEN,
               c64.LIGHTGREY, c64.ORANGE, c64.RED, c64.VIOLET,
@@ -163,7 +165,7 @@ class Pentomino:
         rotation = []
         for i in range(size):
             rotation.append(form[size - 1 - i][:])
-        return Pentomino.transpose(rotation, size)
+        return Polyomino.transpose(rotation, size)
         
     def rotate_right(form, size):
         rotation = []
@@ -196,12 +198,12 @@ class game_state:
         self.timer = 0
         self.frames_per_move = 30
         self.board = [[BACKGROUND_COLOR] * BOARD_WIDTH for y in range(BOARD_HEIGHT)]
-        self.next_piece = Pentomino()
+        self.next_piece = Polyomino()
         self.add_next_piece()
 
     def add_next_piece(self):
         self.piece = self.next_piece
-        self.next_piece = Pentomino()
+        self.next_piece = Polyomino()
         self.X = int(random()*(BOARD_WIDTH - self.piece.size + 1))
         self.Y = 2 - self.piece.size 
 
@@ -237,7 +239,7 @@ def get_input():
                     if valid(state.X + 1, state.Y, state.piece.form):
                         state.X += 1
                 if event.key == pygame.K_UP or event.key == pygame.K_SPACE:
-                    new_form = Pentomino.rotate_right(state.piece.form,
+                    new_form = Polyomino.rotate_right(state.piece.form,
                         state.piece.size)
                     if valid(state.X, state.Y, new_form):
                         state.piece.form = new_form
@@ -345,6 +347,7 @@ def draw_screen():
     pygame.display.update()
 
 while True:
+    clock.tick(FPS)
     draw_screen()
     get_input()
     update_world()

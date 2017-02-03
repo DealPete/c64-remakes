@@ -183,7 +183,7 @@ forever {
 	if missile1 hits alien {
 		.C:0900  A2 07       LDX #$07
 		.C:0902  86 54       STX $54
-		voice 2 volume = 7
+		voice 2 frequency = 7*256
 		.C:0904  A0 81       LDY #$81
 		.C:0906  20 C5 09    JSR $09C5
 		call VOICE(7, 0x81) // noise waveform
@@ -301,7 +301,7 @@ forever {
 		.C:0981  A2 00       LDX #$00
 		.C:0983  A0 21       LDY #$21
 		.C:0985  84 53       STY $53
-		voice 1 volume = 0x21
+		voice 1 frequency = 0x21 * 256
 
 		.C:0987  20 C5 09    JSR $09C5
 		call VOICE(0, 0x21) // sawtooth waveform

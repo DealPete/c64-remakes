@@ -6,12 +6,14 @@ BOARD_WIDTH = 10
 BOARD_HEIGHT = 30
 INFO_WIDTH = 25
 INFO_HEIGHT = BOARD_HEIGHT
+FPS = 60
 
 import pygame
 pygame.init()
 screen = pygame.display.set_mode((16*BOARD_WIDTH + INFO_WIDTH*16 + 48,
     BOARD_HEIGHT*16 + 32))
 pygame.display.set_caption("Polytris")
+clock = pygame.time.Clock()
 
 from c64 import C64
 
@@ -19,7 +21,7 @@ c64 = C64(screen)
 
 BACKGROUND_COLOR = c64.BLACK
 
-class Pentomino:
+class Polyomino:
     colors = [c64.BLUE, c64.BROWN, c64.CYAN, c64.DARKGREY,
               c64.LIGHTRED, c64.GREEN, c64.GREY, c64.LIGHTGREEN,
               c64.LIGHTGREY, c64.ORANGE, c64.RED, c64.VIOLET,
@@ -163,7 +165,7 @@ class Pentomino:
         rotation = []
         for i in range(size):
             rotation.append(form[size - 1 - i][:])
-        return Pentomino.transpose(rotation, size)
+        return Polyomino.transpose(rotation, size)
         
     def rotate_right(form, size):
         rotation = []
@@ -194,17 +196,17 @@ class game_state:
         self.state = "playing"
         self.score = 0
         self.timer = 0
-        self.piece = [Pentomino(), Pentomino()]
+        self.piece = [Polyomino(), Polyomino()]
         self.X = [1, BOARD_WIDTH - 6]
         self.Y = [2 - self.piece[0].size, 2 - self.piece[1].size]
         self.falling = [False, False]
         self.frames_per_move = 40
         self.board = [[BACKGROUND_COLOR] * BOARD_WIDTH for y in range(BOARD_HEIGHT)]
-        self.next_piece = Pentomino()
+        self.next_piece = Polyomino()
 
     def add_next_piece(self, player):
         self.piece[player] = self.next_piece
-        self.next_piece = Pentomino()
+        self.next_piece = Polyomino()
         if player == 0:
             self.X[player] = 1
         else:
@@ -272,12 +274,12 @@ def get_input():
                     if valid(state.X[1] + 1, state.Y[1], state.piece[1].form, 1):
                         state.X[1] += 1
                 if event.key == pygame.K_w:
-                    new_form = Pentomino.rotate_right(state.piece[0].form,
+                    new_form = Polyomino.rotate_right(state.piece[0].form,
                         state.piece[0].size)
                     if valid(state.X[0], state.Y[0], new_form, 0):
                         state.piece[0].form = new_form
                 if event.key == pygame.K_UP:
-                    new_form = Pentomino.rotate_right(state.piece[1].form,
+                    new_form = Polyomino.rotate_right(state.piece[1].form,
                         state.piece[1].size)
                     if valid(state.X[1], state.Y[1], new_form, 1):
                         state.piece[1].form = new_form
@@ -393,6 +395,7 @@ def draw_screen():
     pygame.display.update()
 
 while True:
+    clock.tick(FPS)
     draw_screen()
     get_input()
     update_world()
