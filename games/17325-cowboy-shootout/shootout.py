@@ -7,8 +7,8 @@ WHITE = (255, 255, 255)
 
 screen = pygame.display.set_mode((640,400))
 
-instructions = pygame.font.Font("../C64_Pro-STYLE.ttf", 16)
-petscii = pygame.font.Font("../C64_Pro_Mono-STYLE.ttf", 16)
+instructions = pygame.font.Font("../../C64_Pro-STYLE.ttf", 16)
+petscii = pygame.font.Font("../../C64_Pro_Mono-STYLE.ttf", 16)
 
 status = "counting"
 status_msg = ""

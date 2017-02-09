@@ -8,6 +8,8 @@ import pygame
 pygame.init()
 screen = pygame.display.set_mode((192, BOARD_HEIGHT*16 + 48))
 pygame.display.set_caption("Tetris")
+clock = pygame.time.Clock()
+FPS = 60
 
 from c64 import C64
 
@@ -197,6 +199,7 @@ def draw_screen():
     pygame.display.update()
 
 while True:
+    clock.tick(FPS)
     draw_screen()
     get_input()
     update_world()

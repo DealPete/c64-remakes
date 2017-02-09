@@ -10,8 +10,8 @@ pygame.init()
 
 screen = pygame.display.set_mode((320, 200))
 
-petscii = pygame.font.Font("../C64_Pro_Mono-STYLE.ttf", 16)
-instruct = pygame.font.Font("../C64_Pro-STYLE.ttf", 16)
+petscii = pygame.font.Font("../../C64_Pro_Mono-STYLE.ttf", 16)
+instruct = pygame.font.Font("../../C64_Pro-STYLE.ttf", 16)
 
 def PRINT(text, x, y, color=WHITE):
 	screen.blit(petscii.render(text, False, color), [16*x, 16*y])
