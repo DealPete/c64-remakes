@@ -185,7 +185,7 @@ class Polyomino:
 class game_state:
     def __init__(self):
         scorefile = open("hiscores.csv", "r")
-        reader = csv.reader(scorefile)
+        reader = csv.reader(scorefile, dialect = csv.unix_dialect)
         self.hiscores = []
         for row in reader:
             self.hiscores.append(row)
@@ -255,7 +255,7 @@ def get_input():
                         state.hiscores[state.scorepos][0][:state.cursorpos]
                 elif event.key == pygame.K_RETURN:
                     scorefile = open("hiscores.csv", "w")
-                    writer = csv.writer(scorefile, quoting=csv.QUOTE_NONNUMERIC)
+                    writer = csv.writer(scorefile, dialect = csv.unix_dialect)
                     for row in state.hiscores:
                         writer.writerow(row)
                     scorefile.close()
