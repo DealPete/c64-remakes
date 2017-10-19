@@ -49,6 +49,7 @@ function startGame() {
 		},
 		missile: false,
 		missileSound: null,
+        missileSoundPlaying: false,
 		explodeNoise: null,
 		alienMissile: false,
 		aliens: aliens,
@@ -110,8 +111,9 @@ function updateState() {
 					var y = state.missile.y - alien.y;
 					if (x > 0 && x < 22 && y > 0 && y < 16) {
 						alien.alive = false;
+                        if (state.missileSoundPlaying)
+                            state.missileSound.stop();
 						state.missile = false;
-						state.missileSound.stop();
 						noiseBuffer = audioCtx.createBuffer(1, 14700, 44100);
 						output = noiseBuffer.getChannelData(0);
 						var previousSample;
@@ -132,14 +134,15 @@ function updateState() {
 
 	if (state.alienMissile) {
 		state.alienMissile.y += MISSILE_VELOCITY;
-		if (state.alienMissile.y > 400 + MISSILE_LENGTH)
+		if (state.alienMissile.y > 400 + MISSILE_LENGTH) {
 			state.alienMissile = false;
-		else {
+        } else {
 			var x = state.alienMissile.x - state.player.x;
 			var y = state.alienMissile.y - state.player.y;
 			if (x > 0 && x < 48 && y > 0 && y < 48) {
-				if (state.missileSound)
-					state.missileSound.stop();
+				if (state.missileSoundPlaying) {
+                    state.missileSound.stop();
+                }
 				state.state = "game over";
 				noiseBuffer = audioCtx.createBuffer(1, 44100, 44100);
 				output = noiseBuffer.getChannelData(0);
@@ -202,7 +205,9 @@ window.onkeydown = (event) => {
 			state.missileSound.type = "sawtooth";
 			state.missileSound.frequency.value = c64HertzFactor * 8448;
 			state.missileSound.connect(gain);
+            state.missileSound.onended = () => state.missileSoundPlaying = false; 
 			state.missileSound.start();
+            state.missileSoundPlaying = true;
 		}
 	}
 }	
