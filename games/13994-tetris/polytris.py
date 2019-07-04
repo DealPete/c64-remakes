@@ -335,7 +335,7 @@ def draw_screen():
         c64.PRINT("Congratulations!", BOARD_WIDTH + 3, 4)
         c64.PRINT("Enter your score", BOARD_WIDTH + 3, 5)
     c64.PRINT("HIGH SCORES:", BOARD_WIDTH + 3, 11)
-    for i in range(len(state.hiscores)):
+    for i in range(min(BOARD_HEIGHT - 13, len(state.hiscores))):
         c64.PRINT(state.hiscores[i][0], BOARD_WIDTH + 3, 13 + i)
         score = state.hiscores[i][1]
         c64.PRINT(score, BOARD_WIDTH + INFO_WIDTH - len(score) + 1, 13 + i)
