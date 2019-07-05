@@ -164,8 +164,10 @@ class Polyomino:
     def rotate_left(form, size):
         rotation = []
         for i in range(size):
-            rotation.append(form[size - 1 - i][:])
-        return Polyomino.transpose(rotation, size)
+            rotation.append([])
+            for j in range(size):
+                rotation[i].append(form[j][size - 1 - i])
+        return rotation
         
     def rotate_right(form, size):
         rotation = []
@@ -174,6 +176,29 @@ class Polyomino:
             for j in range(size):
                 rotation[i].append(form[size - 1 - j][i])
         return rotation
+    
+    def flip_horizontal(form, size):
+        rotation = []
+        for i in range(size):
+            rotation.append([])
+            for j in reversed(range(size)):
+                rotation[i].append(form[i][j])
+        return rotation
+
+    def flip_vertical(form, size):
+        rotation = []
+        for i in range(size):
+            rotation.append(form[size - i - 1])
+        return rotation
+    
+    def mutate_piece(state, mutation):
+        mutated = mutation(state.piece.form, state.piece.size)
+        if valid(state.X, state.Y, mutated):
+            state.piece.form = mutated
+    
+    def drop_piece(state):
+        while (valid(state.X, state.Y + 1, state.piece.form)):
+            state.Y += 1
 
 
     def __init__(self):
@@ -238,13 +263,18 @@ def get_input():
                 if event.key == pygame.K_RIGHT:
                     if valid(state.X + 1, state.Y, state.piece.form):
                         state.X += 1
-                if event.key == pygame.K_UP or event.key == pygame.K_SPACE:
-                    new_form = Polyomino.rotate_right(state.piece.form,
-                        state.piece.size)
-                    if valid(state.X, state.Y, new_form):
-                        state.piece.form = new_form
+                if event.key == pygame.K_z:
+                    Polyomino.mutate_piece(state, Polyomino.rotate_left)
+                if event.key == pygame.K_x:
+                    Polyomino.mutate_piece(state, Polyomino.rotate_right)
+                if event.key == pygame.K_c:
+                    Polyomino.mutate_piece(state, Polyomino.flip_horizontal)
+                if event.key == pygame.K_v:
+                    Polyomino.mutate_piece(state, Polyomino.flip_vertical)
                 if event.key == pygame.K_DOWN:
                     state.state = "falling"
+                if event.key == pygame.K_UP:
+                    Polyomino.drop_piece(state)
             elif state.state == "paused":
                 if event.key == pygame.K_p:
                     state.state = "playing"
